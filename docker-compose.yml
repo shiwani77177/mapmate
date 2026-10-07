@@ -1,0 +1,35 @@
+services:
+  postgres:
+    image: postgis/postgis:16-3.4
+    container_name: mapmate-postgres
+    # Apple Silicon (M1/M2/M3): uncomment the next line
+    # platform: linux/amd64
+    environment:
+      POSTGRES_DB: mapmate
+      POSTGRES_USER: mapmate
+      POSTGRES_PASSWORD: mapmate
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mapmate -d mapmate"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: . # root Dockerfile builds frontend + backend into one image
+    container_name: mapmate-app
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/mapmate
+      DB_USER: mapmate
+      DB_PASSWORD: mapmate
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+
+volumes:
+  pgdata:
