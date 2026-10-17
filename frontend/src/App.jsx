@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import DriverLocationForm from "./components/DriverLocationForm";
+import NearbyDrivers from "./components/NearbyDrivers";
 
 function App() {
   const [status, setStatus] = useState("checking...");
@@ -16,7 +17,14 @@ function App() {
   }, []);
 
   return (
-    <div style={{ padding: "2rem", fontFamily: "sans-serif" }}>
+    <div
+      style={{
+        padding: "2rem",
+        fontFamily: "sans-serif",
+        maxWidth: "900px",
+        margin: "0 auto",
+      }}
+    >
       <h1>MapMate</h1>
       <p>
         Backend status: <strong>{status}</strong>
@@ -24,6 +32,7 @@ function App() {
       {postgis && <p>PostGIS: {postgis}</p>}
 
       <DriverLocationForm />
+      <NearbyDrivers />
     </div>
   );
 }

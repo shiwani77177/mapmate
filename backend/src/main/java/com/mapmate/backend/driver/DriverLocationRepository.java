@@ -51,6 +51,39 @@ public class DriverLocationRepository {
 
         return rows.stream().findFirst();
     }
+
+    /**
+     * Find all AVAILABLE drivers within radiusMeters of (lat, lng),
+     * ordered by nearest first.
+     *
+     * ST_DWithin on a geography column uses the GiST index automatically.
+     * ST_Distance returns metres for geography types.
+     */
+    public List<NearbyDriverResponse> findNearby(double lat, double lng, double radiusMeters) {
+        String sql = """
+            SELECT driver_id,
+                   ST_Y(location::geometry)                          AS lat,
+                   ST_X(location::geometry)                          AS lng,
+                   status,
+                   ST_Distance(location,
+                       ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography) AS distance_meters
+            FROM driver_locations
+            WHERE status = 'AVAILABLE'
+              AND ST_DWithin(location,
+                      ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography,
+                      ?)
+            ORDER BY distance_meters
+            LIMIT 50
+            """;
+        // params: lng,lat for distance point; lng,lat for DWithin point; radiusMeters
+        return jdbc.query(sql, (rs, rowNum) -> new NearbyDriverResponse(
+                rs.getLong("driver_id"),
+                rs.getDouble("lat"),
+                rs.getDouble("lng"),
+                DriverStatus.valueOf(rs.getString("status")),
+                rs.getDouble("distance_meters")
+        ), lng, lat, lng, lat, radiusMeters);
+    }
 }
 
 
