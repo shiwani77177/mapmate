@@ -1,29 +1,29 @@
 import { useEffect, useState } from "react";
+import DriverLocationForm from "./components/DriverLocationForm";
 
 function App() {
-  const [data, setData] = useState(null);
-  const [error, setError] = useState(null);
+  const [status, setStatus] = useState("checking...");
+  const [postgis, setPostgis] = useState(null);
 
   useEffect(() => {
     fetch("/api/ping")
-      .then((res) => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json();
+      .then((res) => res.json())
+      .then((data) => {
+        setStatus(data.status);
+        setPostgis(data.postgis);
       })
-      .then(setData)
-      .catch((e) => setError(e.message));
+      .catch(() => setStatus("DOWN"));
   }, []);
 
   return (
-    <div style={{ padding: 24, fontFamily: "sans-serif" }}>
+    <div style={{ padding: "2rem", fontFamily: "sans-serif" }}>
       <h1>MapMate</h1>
-      {error && <p style={{ color: "red" }}>Backend error: {error}</p>}
-      {!data && !error && <p>Connecting to backend...</p>}
-      {data && (
-        <p>
-          Backend: <b>{data.status}</b> | PostGIS: <b>{data.postgis}</b>
-        </p>
-      )}
+      <p>
+        Backend status: <strong>{status}</strong>
+      </p>
+      {postgis && <p>PostGIS: {postgis}</p>}
+
+      <DriverLocationForm />
     </div>
   );
 }
